@@ -1,0 +1,1 @@
+Taken from: http://opencv.itseez.com/doc/tutorials/imgproc/histograms/back_projection/back_projection.html

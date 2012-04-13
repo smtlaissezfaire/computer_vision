@@ -1,0 +1,447 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Back Projection &mdash; OpenCV v2.4.0-beta documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../../',
+        VERSION:     '2.4.0-beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../../../../../../_static/insertIframe.js"></script>
+    <link rel="top" title="OpenCV v2.4.0-beta documentation" href="../../../../../index.html" />
+    <link rel="up" title="imgproc module. Image Processing" href="../../table_of_content_imgproc/table_of_content_imgproc.html" />
+    <link rel="next" title="Template Matching" href="../template_matching/template_matching.html" />
+    <link rel="prev" title="Histogram Comparison" href="../histogram_comparison/histogram_comparison.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../template_matching/template_matching.html" title="Template Matching"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../histogram_comparison/histogram_comparison.html" title="Histogram Comparison"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../../../index.html">OpenCV v2.4.0-beta documentation</a> &raquo;</li>
+          <li><a href="../../../tutorials.html" >OpenCV Tutorials</a> &raquo;</li>
+          <li><a href="../../table_of_content_imgproc/table_of_content_imgproc.html" accesskey="U"><em>imgproc</em> module. Image Processing</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+  
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="back-projection">
+<span id="id1"></span><h1>Back Projection<a class="headerlink" href="#back-projection" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="goal">
+<h2>Goal<a class="headerlink" href="#goal" title="Permalink to this headline">¶</a></h2>
+<p>In this tutorial you will learn:</p>
+<div class="enumeratevisibleitemswithsquare container">
+<ul class="simple">
+<li>What is Back Projection and why it is useful</li>
+<li>How to use the OpenCV function <a class="reference external" href="http://opencv.itseez.com/modules/imgproc/doc/histograms.html?highlight=calcbackproject#calcbackproject">calcBackProject</a> to calculate Back Projection</li>
+<li>How to mix different channels of an image by using the OpenCV function <a class="reference external" href="http://opencv.itseez.com/modules/core/doc/operations_on_arrays.html?highlight=mixchannels#mixchannels">mixChannels</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="theory">
+<h2>Theory<a class="headerlink" href="#theory" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="what-is-back-projection">
+<h3>What is Back Projection?<a class="headerlink" href="#what-is-back-projection" title="Permalink to this headline">¶</a></h3>
+<div class="enumeratevisibleitemswithsquare container">
+<ul class="simple">
+<li>Back Projection is a way of recording how well the pixels of a given image fit the distribution of pixels in a histogram model.</li>
+<li>To make it simpler: For Back Projection, you calculate the histogram model of a feature and then use it to find this feature in an image.</li>
+<li>Application example: If you have a histogram of flesh color (say, a Hue-Saturation histogram ), then you can use it to find flesh color areas in an image:</li>
+</ul>
+</div>
+</div>
+<div class="section" id="how-does-it-work">
+<h3>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this headline">¶</a></h3>
+<div class="enumeratevisibleitemswithsquare container">
+<ul>
+<li><p class="first">We explain this by using the skin example:</p>
+</li>
+<li><p class="first">Let&#8217;s say you have gotten a skin histogram (Hue-Saturation) based on the image below. The histogram besides is going to be our <em>model histogram</em> (which we know represents a sample of skin tonality). You applied some mask to capture only the histogram of the skin area:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<tbody valign="top">
+<tr><td><p class="first last"><img align="middle" alt="T0" class="align-middle" src="../../../../../_images/Back_Projection_Theory02.jpg" /></p>
+</td>
+<td><p class="first last"><img align="middle" alt="T1" class="align-middle" src="../../../../../_images/Back_Projection_Theory12.jpg" /></p>
+</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p class="first">Now, let&#8217;s imagine that you get another hand image (Test Image) like the one below: (with its respective histogram):</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<tbody valign="top">
+<tr><td><p class="first last"><img align="middle" alt="T2" class="align-middle" src="../../../../../_images/Back_Projection_Theory22.jpg" /></p>
+</td>
+<td><p class="first last"><img align="middle" alt="T3" class="align-middle" src="../../../../../_images/Back_Projection_Theory32.jpg" /></p>
+</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p class="first">What we want to do is to use our <em>model histogram</em> (that we know represents a skin tonality) to detect skin areas in our Test Image. Here are the steps</p>
+<ol class="loweralpha">
+<li><p class="first">In each pixel of our Test Image (i.e. <img class="math" src="../../../../../_images/math/41d6ddd5993c418573ce68e285bb36109da45ff1.png" alt="p(i,j)"/> ), collect the data and find the correspondent bin location for that pixel (i.e. <img class="math" src="../../../../../_images/math/21b6b795449bc0a979ae7250bb97b84ce57061ee.png" alt="( h_{i,j}, s_{i,j} )"/> ).</p>
+</li>
+<li><p class="first">Lookup the <em>model histogram</em> in the correspondent bin - <img class="math" src="../../../../../_images/math/21b6b795449bc0a979ae7250bb97b84ce57061ee.png" alt="( h_{i,j}, s_{i,j} )"/> - and read the bin value.</p>
+</li>
+<li><p class="first">Store this bin value in a new image (<em>BackProjection</em>). Also, you may consider to normalize the <em>model histogram</em> first, so the output for the Test Image can be visible for you.</p>
+</li>
+<li><p class="first">Applying the steps above, we get the following BackProjection image for our Test Image:</p>
+<div align="center" class="align-center"><img alt="../../../../../_images/Back_Projection_Theory42.jpg" class="align-center" src="../../../../../_images/Back_Projection_Theory42.jpg" /></div>
+</li>
+<li><p class="first">In terms of statistics, the values stored in <em>BackProjection</em> represent the <em>probability</em> that a pixel in <em>Test Image</em> belongs to a skin area, based on the <em>model histogram</em> that we use. For instance in our Test image, the brighter areas are more probable to be skin area (as they actually are), whereas the darker areas have less probability (notice that these &#8220;dark&#8221; areas belong to surfaces that have some shadow on it, which in turns affects the detection).</p>
+</li>
+</ol>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="code">
+<h2>Code<a class="headerlink" href="#code" title="Permalink to this headline">¶</a></h2>
+<div class="enumeratevisibleitemswithsquare container">
+<ul>
+<li><p class="first"><strong>What does this program do?</strong></p>
+<div class="enumeratevisibleitemswithsquare container">
+<ul class="simple">
+<li>Loads an image</li>
+<li>Convert the original to HSV format and separate only <em>Hue</em> channel to be used for the Histogram (using the OpenCV function <a class="reference external" href="http://opencv.itseez.com/modules/core/doc/operations_on_arrays.html?highlight=mixchannels#mixchannels">mixChannels</a>)</li>
+<li>Let the user to enter the number of bins to be used in the calculation of the histogram.</li>
+<li>Calculate the histogram (and update it if the bins change) and the backprojection of the same image.</li>
+<li>Display the backprojection and the histogram in windows.</li>
+</ul>
+</div>
+</li>
+<li><p class="first"><strong>Downloadable code</strong>:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li>Click <a class="reference external" href="http://code.opencv.org/svn/opencv/trunk/opencv/samples/cpp/tutorial_code/Histograms_Matching/calcBackProject_Demo1.cpp">here</a> for the basic version (explained in this tutorial).</li>
+<li>For stuff slightly fancier (using H-S histograms and floodFill to define a mask for the skin area) you can check the <a class="reference external" href="http://code.opencv.org/svn/opencv/trunk/opencv/samples/cpp/tutorial_code/Histograms_Matching/calcBackProject_Demo2.cpp">improved demo</a></li>
+<li>...or you can always check out the classical <a class="reference external" href="http://code.opencv.org/svn/opencv/trunk/opencv/samples/cpp/camshiftdemo.cpp">camshiftdemo</a> in samples.</li>
+</ol>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>Code at glance:</strong></p>
+</li>
+</ul>
+</div>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="cp">#include &quot;opencv2/imgproc/imgproc.hpp&quot;</span>
+<span class="cp">#include &quot;opencv2/highgui/highgui.hpp&quot;</span>
+
+<span class="cp">#include &lt;iostream&gt;</span>
+
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">cv</span><span class="p">;</span>
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+
+<span class="c1">/// Global Variables</span>
+<span class="n">Mat</span> <span class="n">src</span><span class="p">;</span> <span class="n">Mat</span> <span class="n">hsv</span><span class="p">;</span> <span class="n">Mat</span> <span class="n">hue</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">bins</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span>
+
+<span class="c1">/// Function Headers</span>
+<span class="kt">void</span> <span class="n">Hist_and_Backproj</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">void</span><span class="o">*</span> <span class="p">);</span>
+
+<span class="cm">/** @function main */</span>
+<span class="kt">int</span> <span class="n">main</span><span class="p">(</span> <span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span> <span class="p">)</span>
+<span class="p">{</span>
+  <span class="c1">/// Read the image</span>
+  <span class="n">src</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span> <span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span> <span class="p">);</span>
+  <span class="c1">/// Transform it to HSV</span>
+  <span class="n">cvtColor</span><span class="p">(</span> <span class="n">src</span><span class="p">,</span> <span class="n">hsv</span><span class="p">,</span> <span class="n">CV_BGR2HSV</span> <span class="p">);</span>
+
+  <span class="c1">/// Use only the Hue value</span>
+  <span class="n">hue</span><span class="p">.</span><span class="n">create</span><span class="p">(</span> <span class="n">hsv</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span> <span class="n">hsv</span><span class="p">.</span><span class="n">depth</span><span class="p">()</span> <span class="p">);</span>
+  <span class="kt">int</span> <span class="n">ch</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">};</span>
+  <span class="n">mixChannels</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">hsv</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">hue</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">ch</span><span class="p">,</span> <span class="mi">1</span> <span class="p">);</span>
+
+  <span class="c1">/// Create Trackbar to enter the number of bins</span>
+  <span class="kt">char</span><span class="o">*</span> <span class="n">window_image</span> <span class="o">=</span> <span class="s">&quot;Source image&quot;</span><span class="p">;</span>
+  <span class="n">namedWindow</span><span class="p">(</span> <span class="n">window_image</span><span class="p">,</span> <span class="n">CV_WINDOW_AUTOSIZE</span> <span class="p">);</span>
+  <span class="n">createTrackbar</span><span class="p">(</span><span class="s">&quot;* Hue  bins: &quot;</span><span class="p">,</span> <span class="n">window_image</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">bins</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="n">Hist_and_Backproj</span> <span class="p">);</span>
+  <span class="n">Hist_and_Backproj</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+
+  <span class="c1">/// Show the image</span>
+  <span class="n">imshow</span><span class="p">(</span> <span class="n">window_image</span><span class="p">,</span> <span class="n">src</span> <span class="p">);</span>
+
+  <span class="c1">/// Wait until user exits the program</span>
+  <span class="n">waitKey</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+<span class="cm">/**</span>
+<span class="cm"> * @function Hist_and_Backproj</span>
+<span class="cm"> * @brief Callback to Trackbar</span>
+<span class="cm"> */</span>
+<span class="kt">void</span> <span class="n">Hist_and_Backproj</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">void</span><span class="o">*</span> <span class="p">)</span>
+<span class="p">{</span>
+  <span class="n">MatND</span> <span class="n">hist</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">histSize</span> <span class="o">=</span> <span class="n">MAX</span><span class="p">(</span> <span class="n">bins</span><span class="p">,</span> <span class="mi">2</span> <span class="p">);</span>
+  <span class="kt">float</span> <span class="n">hue_range</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">180</span> <span class="p">};</span>
+  <span class="k">const</span> <span class="kt">float</span><span class="o">*</span> <span class="n">ranges</span> <span class="o">=</span> <span class="p">{</span> <span class="n">hue_range</span> <span class="p">};</span>
+
+  <span class="c1">/// Get the Histogram and normalize it</span>
+  <span class="n">calcHist</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">hue</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">Mat</span><span class="p">(),</span> <span class="n">hist</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">histSize</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ranges</span><span class="p">,</span> <span class="kc">true</span><span class="p">,</span> <span class="kc">false</span> <span class="p">);</span>
+  <span class="n">normalize</span><span class="p">(</span> <span class="n">hist</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="n">NORM_MINMAX</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">Mat</span><span class="p">()</span> <span class="p">);</span>
+
+  <span class="c1">/// Get Backprojection</span>
+  <span class="n">MatND</span> <span class="n">backproj</span><span class="p">;</span>
+  <span class="n">calcBackProject</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">hue</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">backproj</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ranges</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">true</span> <span class="p">);</span>
+
+  <span class="c1">/// Draw the backproj</span>
+  <span class="n">imshow</span><span class="p">(</span> <span class="s">&quot;BackProj&quot;</span><span class="p">,</span> <span class="n">backproj</span> <span class="p">);</span>
+
+  <span class="c1">/// Draw the histogram</span>
+  <span class="kt">int</span> <span class="n">w</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span> <span class="kt">int</span> <span class="n">h</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">bin_w</span> <span class="o">=</span> <span class="n">cvRound</span><span class="p">(</span> <span class="p">(</span><span class="kt">double</span><span class="p">)</span> <span class="n">w</span> <span class="o">/</span> <span class="n">histSize</span> <span class="p">);</span>
+  <span class="n">Mat</span> <span class="n">histImg</span> <span class="o">=</span> <span class="n">Mat</span><span class="o">::</span><span class="n">zeros</span><span class="p">(</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">CV_8UC3</span> <span class="p">);</span>
+
+  <span class="k">for</span><span class="p">(</span> <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">bins</span><span class="p">;</span> <span class="n">i</span> <span class="o">++</span> <span class="p">)</span>
+     <span class="p">{</span> <span class="n">rectangle</span><span class="p">(</span> <span class="n">histImg</span><span class="p">,</span> <span class="n">Point</span><span class="p">(</span> <span class="n">i</span><span class="o">*</span><span class="n">bin_w</span><span class="p">,</span> <span class="n">h</span> <span class="p">),</span> <span class="n">Point</span><span class="p">(</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">bin_w</span><span class="p">,</span> <span class="n">h</span> <span class="o">-</span> <span class="n">cvRound</span><span class="p">(</span> <span class="n">hist</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">h</span><span class="o">/</span><span class="mf">255.0</span> <span class="p">)</span> <span class="p">),</span> <span class="n">Scalar</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span> <span class="p">),</span> <span class="o">-</span><span class="mi">1</span> <span class="p">);</span> <span class="p">}</span>
+
+  <span class="n">imshow</span><span class="p">(</span> <span class="s">&quot;Histogram&quot;</span><span class="p">,</span> <span class="n">histImg</span> <span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="explanation">
+<h2>Explanation<a class="headerlink" href="#explanation" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p class="first">Declare the matrices to store our images and initialize the number of bins to be used by our histogram:</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="n">Mat</span> <span class="n">src</span><span class="p">;</span> <span class="n">Mat</span> <span class="n">hsv</span><span class="p">;</span> <span class="n">Mat</span> <span class="n">hue</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">bins</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Read the input image and transform it to HSV format:</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="n">src</span> <span class="o">=</span> <span class="n">imread</span><span class="p">(</span> <span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span> <span class="p">);</span>
+<span class="n">cvtColor</span><span class="p">(</span> <span class="n">src</span><span class="p">,</span> <span class="n">hsv</span><span class="p">,</span> <span class="n">CV_BGR2HSV</span> <span class="p">);</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">For this tutorial, we will use only the Hue value for our 1-D histogram (check out the fancier code in the links above if you want to use the more standard H-S histogram, which yields better results):</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="n">hue</span><span class="p">.</span><span class="n">create</span><span class="p">(</span> <span class="n">hsv</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span> <span class="n">hsv</span><span class="p">.</span><span class="n">depth</span><span class="p">()</span> <span class="p">);</span>
+<span class="kt">int</span> <span class="n">ch</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">};</span>
+<span class="n">mixChannels</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">hsv</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">hue</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">ch</span><span class="p">,</span> <span class="mi">1</span> <span class="p">);</span>
+</pre></div>
+</div>
+<p>as you see, we use the function <a class="reference external" href="http://opencv.itseez.com/modules/core/doc/operations_on_arrays.html?highlight=mixchannels#mixchannelsmixChannels">http://opencv.itseez.com/modules/core/doc/operations_on_arrays.html?highlight=mixchannels#mixchannelsmixChannels</a> to get only the channel 0 (Hue) from the hsv image. It gets the following parameters:</p>
+<div class="enumeratevisibleitemswithsquare container">
+<ul class="simple">
+<li><strong>&amp;hsv:</strong> The source array from which the channels will be copied</li>
+<li><strong>1:</strong> The number of source arrays</li>
+<li><strong>&amp;hue:</strong> The destination array of the copied channels</li>
+<li><strong>1:</strong> The number of destination arrays</li>
+<li><strong>ch[] = {0,0}:</strong> The array of index pairs indicating how the channels are copied. In this case, the Hue(0) channel of &amp;hsv is being copied to the 0 channel of &amp;hue (1-channel)</li>
+<li><strong>1:</strong> Number of index pairs</li>
+</ul>
+</div>
+</li>
+<li><p class="first">Create a Trackbar for the user to enter the bin values. Any change on the Trackbar means a call to the <strong>Hist_and_Backproj</strong> callback function.</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="kt">char</span><span class="o">*</span> <span class="n">window_image</span> <span class="o">=</span> <span class="s">&quot;Source image&quot;</span><span class="p">;</span>
+<span class="n">namedWindow</span><span class="p">(</span> <span class="n">window_image</span><span class="p">,</span> <span class="n">CV_WINDOW_AUTOSIZE</span> <span class="p">);</span>
+<span class="n">createTrackbar</span><span class="p">(</span><span class="s">&quot;* Hue  bins: &quot;</span><span class="p">,</span> <span class="n">window_image</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">bins</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="n">Hist_and_Backproj</span> <span class="p">);</span>
+<span class="n">Hist_and_Backproj</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Show the image and wait for the user to exit the program:</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="n">imshow</span><span class="p">(</span> <span class="n">window_image</span><span class="p">,</span> <span class="n">src</span> <span class="p">);</span>
+
+<span class="n">waitKey</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><strong>Hist_and_Backproj function:</strong> Initialize the arguments needed for <a class="reference external" href="http://opencv.itseez.com/modules/imgproc/doc/histograms.html?highlight=calchist#calchist">calcHist</a>. The number of bins comes from the Trackbar:</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="kt">void</span> <span class="n">Hist_and_Backproj</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">void</span><span class="o">*</span> <span class="p">)</span>
+<span class="p">{</span>
+  <span class="n">MatND</span> <span class="n">hist</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">histSize</span> <span class="o">=</span> <span class="n">MAX</span><span class="p">(</span> <span class="n">bins</span><span class="p">,</span> <span class="mi">2</span> <span class="p">);</span>
+  <span class="kt">float</span> <span class="n">hue_range</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">180</span> <span class="p">};</span>
+  <span class="k">const</span> <span class="kt">float</span><span class="o">*</span> <span class="n">ranges</span> <span class="o">=</span> <span class="p">{</span> <span class="n">hue_range</span> <span class="p">};</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Calculate the Histogram and normalize it to the range <img class="math" src="../../../../../_images/math/0fb139e8e3c75ef24fe4eac5ba07c800abd7c943.png" alt="[0,255]"/></p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="n">calcHist</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">hue</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">Mat</span><span class="p">(),</span> <span class="n">hist</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">histSize</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ranges</span><span class="p">,</span> <span class="kc">true</span><span class="p">,</span> <span class="kc">false</span> <span class="p">);</span>
+<span class="n">normalize</span><span class="p">(</span> <span class="n">hist</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="n">NORM_MINMAX</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">Mat</span><span class="p">()</span> <span class="p">);</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Get the Backprojection of the same image by calling the function <a class="reference external" href="http://opencv.itseez.com/modules/imgproc/doc/histograms.html?highlight=calcbackproject#calcbackproject">calcBackProject</a></p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="n">MatND</span> <span class="n">backproj</span><span class="p">;</span>
+<span class="n">calcBackProject</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">hue</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">hist</span><span class="p">,</span> <span class="n">backproj</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ranges</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">true</span> <span class="p">);</span>
+</pre></div>
+</div>
+<p>all the arguments are known (the same as used to calculate the histogram), only we add the backproj matrix, which will store the backprojection of the source image (&amp;hue)</p>
+</li>
+<li><p class="first">Display backproj:</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="n">imshow</span><span class="p">(</span> <span class="s">&quot;BackProj&quot;</span><span class="p">,</span> <span class="n">backproj</span> <span class="p">);</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Draw the 1-D Hue histogram of the image:</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="kt">int</span> <span class="n">w</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span> <span class="kt">int</span> <span class="n">h</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">bin_w</span> <span class="o">=</span> <span class="n">cvRound</span><span class="p">(</span> <span class="p">(</span><span class="kt">double</span><span class="p">)</span> <span class="n">w</span> <span class="o">/</span> <span class="n">histSize</span> <span class="p">);</span>
+<span class="n">Mat</span> <span class="n">histImg</span> <span class="o">=</span> <span class="n">Mat</span><span class="o">::</span><span class="n">zeros</span><span class="p">(</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">CV_8UC3</span> <span class="p">);</span>
+
+<span class="k">for</span><span class="p">(</span> <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">bins</span><span class="p">;</span> <span class="n">i</span> <span class="o">++</span> <span class="p">)</span>
+   <span class="p">{</span> <span class="n">rectangle</span><span class="p">(</span> <span class="n">histImg</span><span class="p">,</span> <span class="n">Point</span><span class="p">(</span> <span class="n">i</span><span class="o">*</span><span class="n">bin_w</span><span class="p">,</span> <span class="n">h</span> <span class="p">),</span> <span class="n">Point</span><span class="p">(</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">bin_w</span><span class="p">,</span> <span class="n">h</span> <span class="o">-</span> <span class="n">cvRound</span><span class="p">(</span> <span class="n">hist</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">h</span><span class="o">/</span><span class="mf">255.0</span> <span class="p">)</span> <span class="p">),</span> <span class="n">Scalar</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span> <span class="p">),</span> <span class="o">-</span><span class="mi">1</span> <span class="p">);</span> <span class="p">}</span>
+
+<span class="n">imshow</span><span class="p">(</span> <span class="s">&quot;Histogram&quot;</span><span class="p">,</span> <span class="n">histImg</span> <span class="p">);</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+<div class="section" id="results">
+<h2>Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p class="first">Here are the output by using a sample image ( guess what? Another hand ). You can play with the bin values and you will observe how it affects the results:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+</colgroup>
+<tbody valign="top">
+<tr><td><p class="first last"><img align="middle" alt="R0" class="align-middle" src="../../../../../_images/Back_Projection1_Source_Image2.jpg" /></p>
+</td>
+<td><p class="first last"><img align="middle" alt="R1" class="align-middle" src="../../../../../_images/Back_Projection1_Histogram2.jpg" /></p>
+</td>
+<td><p class="first last"><img align="middle" alt="R2" class="align-middle" src="../../../../../_images/Back_Projection1_BackProj2.jpg" /></p>
+</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ol>
+</div>
+</div>
+
+
+          </div>
+          <div class="feedback">
+              <h2>Help and Feedback</h2>
+              You did not find what you were looking for?
+              <ul>
+                  
+                  
+                  
+                  <li>Ask a question in the <a href="http://tech.groups.yahoo.com/group/OpenCV/">user group/mailing list</a>.</li>
+                  <li>If you think something is missing or wrong in the documentation,
+                  please file a <a href="http://code.opencv.org">bug report</a>.</li>
+              </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../../index.html">
+              <img class="logo" src="../../../../../_static/opencv-logo-white.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+  <h3><a href="../../../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Back Projection</a><ul>
+<li><a class="reference internal" href="#goal">Goal</a></li>
+<li><a class="reference internal" href="#theory">Theory</a><ul>
+<li><a class="reference internal" href="#what-is-back-projection">What is Back Projection?</a></li>
+<li><a class="reference internal" href="#how-does-it-work">How does it work?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#code">Code</a></li>
+<li><a class="reference internal" href="#explanation">Explanation</a></li>
+<li><a class="reference internal" href="#results">Results</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../histogram_comparison/histogram_comparison.html"
+                        title="previous chapter">Histogram Comparison</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../template_matching/template_matching.html"
+                        title="next chapter">Template Matching</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../../../_sources/doc/tutorials/imgproc/histograms/back_projection/back_projection.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../template_matching/template_matching.html" title="Template Matching"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../histogram_comparison/histogram_comparison.html" title="Histogram Comparison"
+             >previous</a> |</li>
+        <li><a href="../../../../../index.html">OpenCV v2.4.0-beta documentation</a> &raquo;</li>
+          <li><a href="../../../tutorials.html" >OpenCV Tutorials</a> &raquo;</li>
+          <li><a href="../../table_of_content_imgproc/table_of_content_imgproc.html" ><em>imgproc</em> module. Image Processing</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011-2012, opencv dev team.
+      Last updated on Apr 02, 2012.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
